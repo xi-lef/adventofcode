@@ -87,9 +87,7 @@ def sim(boost = 0):
             t.units = max(0, t.units - dmg // t.hp)
 
         for a in (IS, INF):
-            for g in a:
-                if g.units == 0:
-                    a.remove(g)
+            a[:] = (g for g in a if g.units > 0)
     return IS, INF
 
 print(sum(g.units for a in sim() for g in a))
