@@ -72,37 +72,40 @@ class Unit:
                     limit = steps
                 elif n in open and n not in units_pos:
                     stack.append((n, steps + 1, move if move else d))
-        #print('cands', cands)
 
         if not cands:
-            return
+            return False
 
         _, move = min(cands, key = lambda x: (x[0].imag, x[0].real, dirs.index(x[1])))
         self.pos += move
-        return move
+        return True
 
 
-def fight(elves, goblins, num_elves = None):
+def fight(elves, goblins, part2 = False):
+    prev_change = True
     for round in count():
         #print('round', round); pr()
 
-        if num_elves and len(elves) < num_elves:
-            return None
-
         units = elves + goblins
         units.sort(key = lambda u: (u.pos.imag, u.pos.real))
+        change = False
         for unit in units:
             if unit.hp <= 0:
                 continue
             if not unit.enemies:
                 return round * sum(u.hp for u in elves + goblins)
 
-            if not unit.can_attack():
-                unit.move()
+            if not unit.can_attack() and (prev_change or change):
+                change |= unit.move()
             ret = unit.try_attack()
             if ret:
+                if part2 and unit.enemies == elves:
+                    return None
+
+                change = True
                 for g in (elves, goblins):
                     g[:] = (u for u in g if u.hp > 0)
+        prev_change = change
 
 
 open = set()
@@ -118,19 +121,24 @@ for y, l in enumerate(sys.stdin):
         elif c == 'G':
             goblins.append(Unit(pos, GOBLINS))
 
-num_elves = len(elves)
 _elves = deepcopy(elves)
 _goblins = deepcopy(goblins)
 
 print(fight(elves, goblins))
 
-for boost in count(1):
+L = 1
+R = 50
+while L <= R:
+    boost = (L + R) // 2
+
     elves = deepcopy(_elves)
     goblins = deepcopy(_goblins)
     for e in elves:
         e.atk += boost
 
-    ret = fight(elves, goblins, num_elves)
+    ret = fight(elves, goblins, True)
     if ret:
-        print(ret)
-        break
+        R = boost - 1
+    else:
+        L = boost + 1
+print(ret)
