@@ -1,16 +1,19 @@
 import sys
 from collections import defaultdict
+from math import sqrt
 
 ip = int(sys.stdin.readline().split()[-1])
 prog = [l.split() for l in sys.stdin]
 for i in prog:
-    op, *args = i
-    i[:] = (op, *map(int, args))
+    i[1 :] = map(int, i[1 :])
 
-def exec(r0 = 0):
-    regs = defaultdict(int, {0: r0})
+def exec(part2 = False):
+    regs = defaultdict(int, {0: part2})
 
     while 0 <= regs[ip] < len(prog):
+        if part2 and regs[ip] == 1:
+            return max(regs.values())
+
         op, a, b, c = prog[regs[ip]]
         #print(op, a, b, c, regs)
         if op.startswith('gt') or op.startswith('eq'):
@@ -40,4 +43,11 @@ def exec(r0 = 0):
     return regs[0]
 
 print(exec())
-print(exec(1))
+
+l = exec(True)
+# see 19.txt
+ret = 0
+for a in range(1, int(sqrt(l)) + 1):
+    if l % a == 0:
+        ret += a + l // a
+print(ret)
