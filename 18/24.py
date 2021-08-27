@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import count
 
 @dataclass
-class Group():
+class Group:
     name: str
     num: int
     units: int
