@@ -1,7 +1,6 @@
 import re
-import sys
 
-ls = [re.match(r'(\w+) (\d+)', l).groups() for l in sys.stdin]
+ls = [re.match(r'(\w+) (\d+)', l).groups() for l in open(0)]
 ls = [(a, int(b)) for a, b in ls]
 
 x = d = d2 = 0

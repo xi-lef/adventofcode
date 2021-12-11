@@ -1,7 +1,6 @@
-import sys
 from collections import Counter
 
-ls = [l.strip() for l in sys.stdin]
+ls = [l.strip() for l in open(0)]
 
 MOST, LEAST = 0, -1
 def f(ls, i):
