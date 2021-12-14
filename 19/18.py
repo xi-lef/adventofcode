@@ -1,76 +1,54 @@
-import string
-import sys
-from collections import defaultdict, deque
+from collections import deque
 
 start = 0
-open = set()
+vault = set()
 keys = {}
 doors = {}
 
-for y, l in enumerate(sys.stdin):
+for y, l in enumerate(open(0)):
     for x, c in enumerate(l):
         p = x + y * 1j
         if c == '@':
             start = p
-            open.add(p)
+            vault.add(p)
         elif c == '.':
-            open.add(p)
-        elif c in string.ascii_lowercase:
+            vault.add(p)
+        elif c.islower():
             keys[p] = c
-        elif c in string.ascii_uppercase:
+            vault.add(p)
+        elif c.isupper():
             doors[p] = c.lower()
 
-good = 1e9
-dists = defaultdict(lambda: 1e9)
-stack = deque([(start, frozenset(), 0)])
-while stack:
-    p, k, s = e = stack.popleft()
+def bfs(vault, start, keys):
+    visited = set()
+    stack = deque([(start, frozenset(), 0)])
+    while stack:
+        p, k, s = stack.popleft()
+        if (p, k) in visited:
+            continue
+        visited.add((p, k))
 
-    if p in keys:
-        k = k | frozenset(keys[p])
-    #print(p, k, s)
-
-    if len(k) == len(keys):
-        good = min(good, s)
-        continue
-    if dists[(p, k)] <= s:
-        continue
-    dists[(p, k)] = s
-
-    for d in (1, -1, 1j, -1j):
-        n = p + d
-        if n in open or n in keys or (n in doors and doors[n] in k):
-            stack.append((n, k, s + 1))
-print(good)
-
-open.remove(start)
-for d in (1, -1, 1j, -1j):
-    open.remove(start + d)
-starts = (start + 1 + 1j, start + 1 - 1j, start - 1 - 1j, start - 1 + 1j)
-
-good = 1e9
-dists = defaultdict(lambda: 1e9)
-stack = deque([(starts, frozenset(), 0)])
-while stack:
-    ps, k, s = e = stack.popleft()
-
-    for p in ps:
         if p in keys:
             k = k | frozenset(keys[p])
-    #print(p, k, s)
 
-    if len(k) == len(keys):
-        good = min(good, s)
-        continue
-    if dists[(ps, k)] <= s:
-        continue
-    dists[(ps, k)] = s
+        if len(k) == len(keys):
+            return s
 
-    for i, p in enumerate(ps):
         for d in (1, -1, 1j, -1j):
             n = p + d
-            if n in open or n in keys or (n in doors and doors[n] in k):
-                ns = list(ps)
-                ns[i] = n
-                stack.append((tuple(ns), k, s + 1))
-print(good)
+            # completely ignoring doors also works for part 2...
+            if n in vault or (n in doors and (doors[n] in k or doors[n] not in keys.values())):
+                stack.append((n, k, s + 1))
+
+print(bfs(vault, start, keys))
+
+for d in (0, 1, -1, 1j, -1j):
+    vault.remove(start + d)
+vaults = [{f for f in vault if f.real < start.real and f.imag < start.imag},
+          {f for f in vault if f.real > start.real and f.imag < start.imag},
+          {f for f in vault if f.real < start.real and f.imag > start.imag},
+          {f for f in vault if f.real > start.real and f.imag > start.imag}]
+starts = (start - 1 - 1j, start + 1 - 1j, start - 1 + 1j, start + 1 + 1j)
+keys_per_vault = [{k: c for k, c in keys.items() if k in vault} for vault in vaults]
+
+print(sum(bfs(v, s, k) for v, s, k in zip(vaults, starts, keys_per_vault)))
